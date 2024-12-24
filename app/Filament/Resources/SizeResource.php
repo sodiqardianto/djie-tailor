@@ -2,23 +2,20 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ModelTypeResource\Pages;
-use App\Filament\Resources\ModelTypeResource\RelationManagers;
-use App\Models\ModelType;
+use App\Filament\Resources\SizeResource\Pages;
+use App\Filament\Resources\SizeResource\RelationManagers;
+use App\Models\Size;
 use Filament\Forms;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ModelTypeResource extends Resource
+class SizeResource extends Resource
 {
-    protected static ?string $model = ModelType::class;
+    protected static ?string $model = Size::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -26,18 +23,9 @@ class ModelTypeResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('category_id')
-                    ->relationship('category', 'name')
-                    ->required(),
-                TextInput::make('name')
+                Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('sewing_wages')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('sell_price')
-                    ->required()
-                    ->numeric(),
             ]);
     }
 
@@ -45,27 +33,17 @@ class ModelTypeResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('category.name')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('name')
-                    ->sortable()
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('sewing_wages')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('sell_price')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
+                Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -93,9 +71,9 @@ class ModelTypeResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListModelTypes::route('/'),
-            'create' => Pages\CreateModelType::route('/create'),
-            'edit' => Pages\EditModelType::route('/{record}/edit'),
+            'index' => Pages\ListSizes::route('/'),
+            'create' => Pages\CreateSize::route('/create'),
+            'edit' => Pages\EditSize::route('/{record}/edit'),
         ];
     }
 }

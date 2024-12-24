@@ -4,13 +4,17 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderInResource\Pages;
 use App\Filament\Resources\OrderInResource\RelationManagers;
-use App\Models\Model;
-use App\Models\ModelType;
 use App\Models\OrderIn;
 use Filament\Forms;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -21,29 +25,29 @@ class OrderInResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Orders';
-
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('model_type_id')
-                    ->label('Model')
-                    ->options(function () {
-                        return ModelType::with('category')
-                            ->get()
-                            ->mapWithKeys(function ($modelType) {
-                                return [$modelType->id => $modelType->category->name . ' ' . $modelType->name];
-                            });
-                    })
-                    ->required(),                        
-                Forms\Components\TextInput::make('quantity')
+                TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('quantity')
                     ->required()
                     ->numeric(),
-                Forms\Components\FileUpload::make('image')
+                Select::make('size_id')
+                    ->relationship('size', 'name')
+                    ->required(),
+                DateTimePicker::make('deadline')
+                    ->required(),
+                Select::make('customer_id')
+                    ->relationship('customer', 'name')
+                    ->required(),
+                Select::make('model_type_id')
+                    ->relationship('modelType', 'name')
+                    ->required(),
+                FileUpload::make('image')
                     ->image(),
-                Forms\Components\Select::make('customer_id')
-                    ->relationship('customer', 'name'),
             ]);
     }
 
@@ -51,33 +55,35 @@ class OrderInResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('model_type_id')
-                ->label('Model')
-                ->getStateUsing(function (OrderIn $record) {
-                    return ModelType::find($record->model_type_id)->category->name . ' ' . ModelType::find($record->model_type_id)->name;
-                })
-                ->searchable()
-                ->sortable(),
-                Tables\Columns\TextColumn::make('quantity')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\ImageColumn::make('image'),
-                Tables\Columns\TextColumn::make('customer.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
+                TextColumn::make('name')
+                    ->label('Nama')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('modelType.name')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('size.name')
+                    ->sortable(),
+                TextColumn::make('quantity')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('customer.name')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('deadline')
+                    ->dateTime()
+                    ->sortable(),
+                ImageColumn::make('image')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
+                TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

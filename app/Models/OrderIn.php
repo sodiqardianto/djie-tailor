@@ -11,7 +11,7 @@ class OrderIn extends Model
 
     protected $guarded = ['id'];
 
-    public function model_type()
+    public function modelType()
     {
         return $this->belongsTo(ModelType::class);
     }
@@ -19,5 +19,10 @@ class OrderIn extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function size()
+    {
+        return $this->belongsTo(Size::class);
     }
 }

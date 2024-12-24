@@ -13,16 +13,19 @@ return new class extends Migration
     {
         Schema::create('order_ins', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('model_type_id');
+            $table->string('name');
             $table->integer('quantity');
+            $table->timestamp('deadline');
             $table->string('image')->nullable();
             $table->unsignedBigInteger('customer_id');
-            $table->enum('status', ['pesanan diterima', 'menunggu', 'proses menjahit', 'selesai', 'dibatalkan', 'dikembalikan'])->default('pesanan diterima');
+            $table->unsignedBigInteger('model_type_id');
+            $table->unsignedBigInteger('size_id');
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('model_id')->references('id')->on('model_types')->onDelete('cascade');
+            $table->foreign('model_type_id')->references('id')->on('model_types')->onDelete('cascade');
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('size_id')->references('id')->on('sizes')->onDelete('cascade');
         });
     }
 
