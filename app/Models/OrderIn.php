@@ -25,4 +25,9 @@ class OrderIn extends Model
     {
         return $this->belongsTo(Size::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
