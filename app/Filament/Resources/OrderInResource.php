@@ -4,13 +4,19 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderInResource\Pages;
 use App\Filament\Resources\OrderInResource\RelationManagers;
+use App\Models\Collar;
 use App\Models\OrderIn;
 use App\Models\OrderProcess;
+use App\Models\ShirtModel;
 use Filament\Forms;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -25,6 +31,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class OrderInResource extends Resource
 {
@@ -131,15 +138,38 @@ class OrderInResource extends Resource
                     EditAction::make(),
                     Action::make('Potong')
                         ->form([
-                            Select::make('user_id')
-                                ->relationship('user', 'name', fn (Builder $query) => $query->where('name', '!=', 'superadmin'))
-                                ->label('Pemotong')
-                                ->placeholder('Pilih Pemotong')
-                                ->required(),
-                            TextInput::make('quantity')
-                                ->label('Jumlah')
-                                ->required()
-                                ->numeric(),
+                            Wizard::make([
+                                Step::make('Potong')
+                                    ->description('Pilih pemotong dan masukkan jumlah yang dipotong.')
+                                    ->schema([
+                                        Select::make('user_id')
+                                            ->relationship('user', 'name', fn (Builder $query) => $query->where('name', '!=', 'superadmin'))
+                                            ->label('Pemotong')
+                                            ->placeholder('Pilih Pemotong')
+                                            ->required(),
+                                    ]),
+                                Step::make('Kerah')
+                                    ->description('Pilih model kerah yang akan diinginkan.')
+                                    ->schema([
+                                        Radio::make('collar_model')
+                                        ->view('components.collar-radio-options')
+                                        ->required(),
+                                    ]),
+                                Step::make('Plaket')
+                                    ->description('Pilih model plaket yang akan diinginkan.')
+                                    ->schema([
+                                        Radio::make('placket_model')
+                                        // ->options(function () {
+                                        //     return \App\Models\Placket::all()
+                                        //         ->pluck('id');
+                                        // })
+                                        // ->afterStateHydrated(function ($set, $state) {
+                                        //     $set('placket_model', $state);
+                                        // })
+                                        ->view('components.placket-radio-options')
+                                        ->required(),
+                                    ]),
+                            ])
                         ])
                         ->icon('heroicon-o-scissors')
                         ->visible(function (OrderIn $record) {
@@ -156,37 +186,15 @@ class OrderInResource extends Resource
                         })
                         ->action(function (OrderIn $record, array $data) {
 
-                            // Check if the quantity is more than the available quantity
-                            if ($record->quantity < $data['quantity']) {
-                                Notification::make()
-                                    ->title('Gagal simpan')
-                                    ->body('Jumlah yang dimasukkan melebihi jumlah pada pesanan masuk.')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-
-                            // Check if the quantity is more than the remaining quantity
-                            $sumQuantity = OrderProcess::where('order_in_id', $record->id)
-                                ->where('process_id', 1)
-                                ->sum('quantity');
-
-                            // Check if the quantity is more than the available quantity
-                            $remainingQuantity = $record->quantity - $sumQuantity;
-
-                            if ($remainingQuantity < $data['quantity']) {
-                                Notification::make()
-                                    ->title('Gagal simpan')
-                                    ->body('Jumlah yang dimasukkan melebihi sisa jumlah yang bisa diproses.')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
+                            ShirtModel::create([
+                                'collar_id' => $data['collar_model'],
+                                'placket_id' => $data['placket_model'],
+                            ]);
 
                             OrderProcess::create([
                                 'order_in_id' => $record->id,
                                 'user_id' => $data['user_id'],
-                                'quantity' => $data['quantity'],
+                                'quantity' => 1,
                                 'process_id' => 1,
                             ]);
 
